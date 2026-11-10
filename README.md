@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="assets/banner.jpg" alt="The 10 Tasks to Master Wazuh Hero Banner" width="100%" />
+<img src="assets/banner.jpg" alt="Wazuh Setup, Lab & Detection Tasks Hero Banner" width="100%" />
 
-# 🛡️ The 10 Tasks to Master Wazuh
+# 🛡️ Wazuh SIEM Setup, Lab & Detection Tasks
 ### *From Blind Copy-Paste to Production Detection Engineering, Threat Hunting, and Active Defense*
 
 [![Wazuh Version](https://img.shields.io/badge/Wazuh-v4.14.8-0052cc?style=for-the-badge&logo=wazuh&logoColor=white)](https://wazuh.com/)
@@ -195,7 +195,7 @@ The repository includes a curated library of production threat hunting queries:
 ## 📁 Repository Structure
 
 ```text
-the-10-task-to-master-wazuh/
+wazuh-setup-and-lab-tasks/
 ├── README.md                                # Master showcase documentation
 ├── LICENSE                                  # MIT License
 ├── .gitignore                               # OS and editor cleanliness rules

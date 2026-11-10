@@ -1,7 +1,7 @@
 <!--
   Custom Detection & Tuning Rules
   Author: Mahi Al Jaber (github.com/mahialjaber)
-  Repository: the-10-task-to-master-wazuh
+  Repository: wazuh-setup-and-lab-tasks
   Location on Manager: /var/ossec/etc/rules/local_rules.xml
 -->
 
