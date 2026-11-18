@@ -10,7 +10,7 @@ This directory houses the custom detection rules, suppression logic, and MITRE A
 | :---: | :---: | :--- | :--- | :--- |
 | **`100025`** | **10** | High Reconnaissance | PCRE2 regex matching `whoami /priv` or `cat /etc/shadow` across Windows and Linux. | **T1033**, **T1003.008** |
 | **`100060`** | **0** | False Positive Tuning | Silences Suricata ping signature `9000001` exclusively when originating from authorized Kali IPv6. | **T1046** |
-| **`100010`** | **14** | Critical Breach | Correlates Windows logon success following multiple auth failures from same IP (`if_sid: 60106` + `if_matched_sid: 18153`). | **T1110**, **T1078** |
+| **`100010`** | **14** | Critical Breach | Correlates Windows logon success following multiple auth failures from same IP (`if_sid: 60106` + `if_matched_sid: 60204`). | **T1110**, **T1078** |
 | **`100011`** | **14** | Critical Breach | Correlates SSH authentication success following brute-force failures from same IP (`if_sid: 5715` + `if_matched_sid: 5720`). | **T1110**, **T1078** |
 | **`100012`** | **13** | Lateral Movement | Detects Sysinternals PsExec service installation (`Event ID 7045` + `serviceName: PSEXESVC`). | **T1543.003**, **T1021.002** |
 | **`100013`** | **14** | Lateral Movement | Detects Impacket PsExec randomized service installation (`Event ID 7045` + `%SystemRoot%\*.exe`). | **T1543.003**, **T1021.002** |

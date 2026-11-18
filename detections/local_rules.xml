@@ -40,8 +40,8 @@
   <!-- ======================================================== -->
   <rule id="100010" level="14" timeframe="300">
     <if_sid>60106</if_sid>
-    <if_matched_sid>18153</if_matched_sid>
-    <same_source_ip />
+    <if_matched_sid>60204</if_matched_sid>
+    <same_field>win.eventdata.ipAddress</same_field>
     <description>CRITICAL: Windows logon succeeded following multiple authentication failures from same IP</description>
     <mitre>
       <id>T1110</id>
@@ -83,7 +83,7 @@
   <rule id="100013" level="14">
     <if_group>windows</if_group>
     <field name="win.system.eventID">^7045$</field>
-    <field name="win.eventdata.imagePath">^%?SystemRoot%?\\([A-Za-z0-9]{4,8})\.exe$</field>
+    <field name="win.eventdata.imagePath" type="pcre2">^%?SystemRoot%?\\([A-Za-z0-9]{4,8})\.exe$</field>
     <description>CRITICAL: Impacket PsExec Randomized Service Binary Installation Detected</description>
     <mitre>
       <id>T1543.003</id>

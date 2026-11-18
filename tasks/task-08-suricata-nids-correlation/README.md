@@ -22,7 +22,7 @@ Host-level event logs alone cannot detect network-layer reconnaissance or port p
 The SOC Lead requires:
 1. Executing an aggressive Nmap service scan from Kali Linux against Rocky Linux.
 2. Ingesting Suricata's JSON event stream (`eve.json`) through the Wazuh Agent on Rocky Linux.
-3. Verifying that the Wazuh Manager's `0830-suricata_rules.xml` decoder catches the event, extracts network metadata (interface, protocol, signature ID), and presents an alert in the dashboard.
+3. Verifying that the Wazuh Manager's `json` decoder and `0475-suricata_rules.xml` ruleset catch the event, extract network metadata (interface, protocol, signature ID), and present an alert in the dashboard.
 
 ---
 

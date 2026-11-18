@@ -9,7 +9,7 @@
 | **Adversary Machine** | Kali Linux (`192.168.198.128`) |
 | **Attack Vector** | High-Rate SSH Credential Brute-Force via NetExec (`nxc`) |
 | **Containment Action** | Dynamic Firewall Drop (`firewall-drop` script) |
-| **Triggered Rules** | **Rule `5712` / `100011`** |
+| **Triggered Rules** | **Rule `5712` / `5720` / `100011`** |
 | **MITRE ATT&CK Mapping** | **T1110** (Brute Force), **T1078** (Valid Accounts) |
 | **Verification Status** | **Verified in Live Lab** |
 
@@ -57,7 +57,7 @@ In `/var/ossec/etc/ossec.conf` on the Ubuntu Manager:
   <command>firewall-drop</command>
   <location>defined-agent</location>
   <agent_id>002</agent_id>
-  <rules_id>5712, 100011</rules_id>
+  <rules_id>5712, 5720, 100011</rules_id>
   <timeout>1200</timeout>
 </active-response>
 ```
@@ -86,7 +86,7 @@ The SSH daemon stopped responding to Kali because incoming packets were dropped 
 ## 📸 Verified Technical Evidence
 
 ### 1. Active Response Configuration in Manager `ossec.conf`
-Shows `firewall-drop` configuration with rule triggers and timeouts:
+Shows initial `firewall-drop` testing block (`<location>local</location>`, `600s` timeout) prior to pinning `defined-agent` (`002`), adding `5720`, and raising timeout to `1200s`:
 
 ![Manager Active Response Config](../../assets/screenshots/task05-manager-active-response-config.png)
 
@@ -96,24 +96,26 @@ Shows package installation and daemon enablement on the victim host:
 ![Rocky Linux iptables and rsyslog Setup](../../assets/screenshots/task05-rocky-iptables-rsyslog-setup.png)
 
 ### 3. Kali Linux NetExec Connection Drop
-NetExec Paramiko errors confirming network drop during active password spraying:
+NetExec Paramiko banner-read errors during active password spraying:
 
 ![Kali Linux SSH Brute Force Drop](../../assets/screenshots/task05-kali-ssh-bruteforce-drop.png)
 
 ### 4. Suricata SSH Protocol Decoding
-Wazuh dashboard showing Suricata flagging SSH protocol anomalies during the drop:
+Wazuh dashboard showing `SURICATA SSH invalid banner` events in the Threat Hunting table alongside Suricata stream telemetry:
 
 ![Suricata SSH Banner Alert](../../assets/screenshots/task05-suricata-ssh-banner-alert.png)
 
 ---
 
-## 🧠 Analyst Engineering Notes & The Crucial Nuance
+## 🧠 Analyst Engineering Notes & Crucial Nuances
 
-> **The Senior SOC Nuance: `<location>` Target Logic:**  
-> During initial deployment testing, the active response was configured with `<location>local</location>`. However, this failed to drop Kali's packets at the victim endpoint.  
-> 
-> The microscopic architectural detail:  
-> * `<location>local</location>` tells the system to execute the script **on the machine that generated the alert** (the Manager itself). It does not block traffic reaching Agent 002.
-> * `<location>defined-agent</location>` with `<agent_id>002</agent_id>` (or `<location>all</location>`) commands the Manager to dispatch the AR execution command over `TCP 1514` to **Agent 002 (Rocky Linux)** so that Rocky drops Kali's packets in its local firewall.
+> **1. `<location>` Target Logic (`local` vs `server` vs `defined-agent`):**  
+> * `<location>local</location>` executes the Active Response script on whichever node/agent **originated the log event**. For logs collected locally by Agent `002` (`/var/log/secure`), `local` targets Agent `002`; however, if logs arrive via remote `rsyslog` forwarding or manager-side ingestion, the originating node is the **Manager (`000`)**, so `local` runs on the Manager instead of the Rocky Linux victim.
+> * `<location>server</location>` always runs on the Wazuh Manager itself.
+> * `<location>defined-agent</location>` with `<agent_id>002</agent_id>` explicitly dispatches the AR execution command over `TCP 1514` to **Agent 002 (Rocky Linux)** regardless of log ingestion path, ensuring Rocky's local firewall drops the attacker.
 >
-> Diagnosing and resolving this interaction provided deep, practical infrastructure knowledge of Wazuh's distributed command-and-control messaging bus.
+> **2. SSH Rule Trigger Coverage (`5712` vs `5720`):**  
+> * Rule `5712` only matches **invalid-user** SSH failures (`if_matched_sid: 5710`), whereas spraying an existing local account such as `perker` fires **Rule `5720`** (failed password for a valid user, `if_matched_sid: 5716`). Including both `5712` and `5720` (alongside escalation rule `100011`) in `<rules_id>` prevents valid-user sprays from bypassing containment prior to a successful login.
+>
+> **3. Rocky Linux 9 Firewall Backend:**  
+> * Rocky Linux 9 runs `firewalld` on top of `nftables`. Ensure either `iptables-nft` is available for `firewall-drop` or use Wazuh's native `firewalld-drop` executable with `firewalld` running, and verify execution in `/var/ossec/logs/active-responses.log`.

@@ -14,7 +14,7 @@ This matrix maps every challenge in the **10-Task Wazuh Gauntlet** to its corres
 | **03** | Detection Engineering | Discovery | System Owner/User Discovery | **T1033** | Custom Rule `100025` (PCRE2 `whoami /priv`) |
 | **03** | Detection Engineering | Credential Access | OS Credential Dumping: /etc/passwd and /etc/shadow | **T1003.008** | Custom Rule `100025` (PCRE2 `cat /etc/shadow`) |
 | **04** | Threat Intelligence | Execution | Exploitation for Client Execution | **T1203** | `wazuh-integratord` VirusTotal API $\rightarrow$ Rule `87105` |
-| **05** | Active Defense | Credential Access | Brute Force: Password Guessing | **T1110.001** | Syslog `/var/log/secure` $\rightarrow$ Rules `5712`, `100011` |
+| **05** | Active Defense | Credential Access | Brute Force: Password Guessing | **T1110.001** | Syslog `/var/log/secure` $\rightarrow$ Rules `5712`, `5720`, `100011` |
 | **05** | Active Defense | Containment / Defense | Dynamic Firewall Dropping | — | Active Response `firewall-drop` script execution |
 | **06** | SOC Threat Hunting | Credential Access | Brute Force: Credential Spraying | **T1110.003** | DQL Query Filtering PAM Failures & SSH Brute Force |
 | **07** | Windows Lineage | Execution | Command and Scripting Interpreter: Windows Command Shell | **T1059.003** | Event ID 4688 $\rightarrow$ Rule `67027` (Command lines) |

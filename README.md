@@ -26,7 +26,7 @@
 Most security tutorials teach superficial button-clicking: installing an agent, running a script, and staring at a pre-built dashboard. In real-world enterprise Security Operations Centers (SOCs), that breaks down the moment:
 1. An attacker modifies a production binary and you need **sub-second differential telemetry**.
 2. Alert fatigue floods your analysts with hundreds of benign scanner alerts requiring **scoped suppression (`level="0"`)**.
-3. Active defense commands fail because **agent execution targets** (`<location>local</location>` vs `<location>defined-agent</location>`) were misconfigured.
+3. Active defense commands fail because **agent execution scoping** (`<location>local</location>` vs `<location>defined-agent</location>`), rule matching (`5712` vs `5720`), or RHEL/Rocky firewall backends (`firewalld` / `iptables-nft`) were misconfigured.
 4. You need to pull vulnerable CVEs programmatically using raw **OpenSearch Dev Tools REST queries** rather than clicking around the GUI.
 
 This repository documents the unassisted execution and verification of **10 rigorous, enterprise-grade challenges** across AWS CloudTrail, Rocky Linux 9, Windows 11 Enterprise, Suricata NIDS, VirusTotal Threat Intel, and Kali Linux attack simulations. Every scenario was tested end-to-end to build defensible detection engineering and threat hunting expertise.
@@ -40,7 +40,7 @@ The validation environment mirrors a modern hybrid enterprise network with endpo
 ```mermaid
 flowchart TD
     subgraph ATTACKER["🔴 Adversary / Red Team"]
-        Kali["Kali Linux 2024<br/><code>192.168.198.134</code><br/><i>Nmap, NetExec, Brute-Force</i>"]
+        Kali["Kali Linux 2024<br/><code>192.168.198.128</code><br/><i>Nmap, NetExec, Brute-Force</i>"]
     end
 
     subgraph CLOUD["☁️ Cloud Infrastructure (AWS)"]
@@ -52,7 +52,7 @@ flowchart TD
 
     subgraph ENDPOINTS["🖥️ Monitored Endpoints"]
         RHEL["Rocky Linux 9 (Agent 002)<br/><code>192.168.198.132</code><br/><i>FIM, Syscheck, Auditd, Suricata NIDS</i>"]
-        WIN["Windows 11 (Agent 001)<br/><code>192.168.198.131</code><br/><i>Sysmon, Event ID 4688, Process Lineage</i>"]
+        WIN["Windows 11 (Agent 001)<br/><code>192.168.198.129</code><br/><i>Sysmon, Event ID 4688, Process Lineage</i>"]
     end
 
     subgraph THREAT_INTEL["🌐 External Threat Intel"]
@@ -60,7 +60,7 @@ flowchart TD
     end
 
     subgraph SIEM_STACK["🛡️ Wazuh SIEM & Analytics Core"]
-        Manager["Wazuh Manager 4.14.8 (Ubuntu 24.04)<br/><code>192.168.198.133</code><br/><code>wazuh-remoted</code> • <code>wazuh-analysisd</code>"]
+        Manager["Wazuh Manager 4.14.8 (Ubuntu 24.04)<br/><code>192.168.198.130</code><br/><code>wazuh-remoted</code> • <code>wazuh-analysisd</code>"]
         AR["Active Response Engine<br/><code>firewall-drop</code> • <code>wazuh-execd</code>"]
         Integrator["wazuh-integratord<br/><i>External API Bridge</i>"]
         Indexer["OpenSearch Indexer 2.19.1<br/><i>Indices: wazuh-alerts-*, wazuh-states-*</i>"]
@@ -116,7 +116,7 @@ Each task represents an independent defensive module complete with attack simula
 ## ⚡ Standout Engineering Breakthroughs
 
 * **Tier-3 OpenSearch Dev Tools Querying (Task 09):** Bypassed GUI limitations by writing raw Elasticsearch/OpenSearch JSON REST queries against `wazuh-states-vulnerabilities-*` to programmatically extract the highest-severity CVEs across heterogeneous endpoints.
-* **5-Hour Active Defense Root Cause Debugging (Task 05):** Uncovered the critical difference between `<location>local</location>` (manager-side blocking) and `<location>defined-agent</location>` (targeted endpoint blocking), successfully mitigating Kali Linux NetExec brute force at the Linux kernel level.
+* **5-Hour Active Defense Root Cause Debugging (Task 05):** Diagnosed how Rocky Linux 9's `rsyslog` / `/var/log/secure` collection, `iptables-nft`/`firewalld` firewall backend, SSH rule triggers (`5712` invalid user vs `5720` failed password), and `<location>` scoping (`local` vs `server` vs `defined-agent`) interact when blocking Kali NetExec SSH brute force.
 * **Production Alert Fatigue Tuning (Task 10):** Addressed the #1 operational issue in modern SOCs by engineering a surgical `level="0"` suppression rule anchored to exact IPv6 addresses, reducing benign scanner noise to zero while preserving alerting for genuine threats.
 * **Sub-Second Binary FIM Differential Analysis (Task 02):** Validated inotify differential reporting against modified production binaries in `/usr/bin/`, confirming integrity monitoring without crashing the `syscheck` engine.
 
@@ -139,14 +139,25 @@ All custom rules authored during this project are located in [`detections/local_
     </mitre>
   </rule>
 
-  <!-- TASK 05: Active Response Trigger for SSH Brute Force -->
-  <rule id="100001" level="10" frequency="5" timeframe="120">
+  <!-- TASK 05: Overwrite Rules 5720 / 5712 for SSH Brute Force AR -->
+  <rule id="5720" level="10" frequency="10" timeframe="120" overwrite="yes">
+    <if_matched_sid>5716</if_matched_sid>
+    <same_source_ip />
+    <description>sshd: 10 failed authentication attempts from same IP (Brute Force)</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>authentication_failures,</group>
+  </rule>
+
+  <rule id="5712" level="10" frequency="10" timeframe="120" overwrite="yes">
     <if_matched_sid>5710</if_matched_sid>
     <same_source_ip />
-    <description>sshd: Multiple failed logins from same source IP (AR Trigger)</description>
+    <description>sshd: 10 failed login attempts with invalid user from same IP (Brute Force)</description>
     <mitre>
-      <id>T1110.001</id>
+      <id>T1110</id>
     </mitre>
+    <group>authentication_failures,</group>
   </rule>
 
   <!-- TASK 10: Suricata NIDS False Positive Suppression Rule -->
@@ -188,7 +199,7 @@ The repository includes a curated library of production threat hunting queries:
 | **Threat Hunting & DQL** | Crafted boolean DQL queries, generated visual aggregations, and isolated 42 high-risk alerts from endpoint noise. | **Verified** |
 | **Database & API Querying** | Utilized OpenSearch Dev Tools REST console to query indices with multi-field descending sorting. | **Verified** |
 | **SOC Operations & Tuning** | Diagnosed alert noise and authored precision `level="0"` suppression rules for authorized probes (Rule 100060). | **Verified** |
-| **Active Defense (Remediation)** | Diagnosed `firewalld`, `iptables-nft`, and active response location logic for dynamic IP blocking (Rule 5712, 100011). | **Verified** |
+| **Active Defense (Remediation)** | Diagnosed `firewalld`, `iptables-nft`, and active response location logic for dynamic IP blocking (Rules `5712`, `5720`, `100011`). | **Verified** |
 
 ---
 

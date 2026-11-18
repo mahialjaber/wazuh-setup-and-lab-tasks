@@ -85,7 +85,7 @@ Evaluates the hierarchical rule tree:
                  │
                  ▼ (TCP 1514)
 [Wazuh Manager: wazuh-analysisd]
-   ├── Matches Rule 5712 / 100011 (Brute-force detected)
+   ├── Matches Rule 5712 / 5720 / 100011 (Brute-force detected)
    └── Matches <active-response> in ossec.conf:
                  │
                  ▼
