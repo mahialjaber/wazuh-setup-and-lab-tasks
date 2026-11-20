@@ -1,6 +1,6 @@
 # 🗺️ MITRE ATT&CK Enterprise Matrix Mapping
 
-This matrix maps every challenge in the **10-Task Wazuh Gauntlet** to its corresponding **MITRE ATT&CK Enterprise (v15)** tactic, technique, and detection signature.
+This matrix maps every challenge in the **10-Task Wazuh Gauntlet** to its corresponding **MITRE ATT&CK Enterprise (v16.1)** tactic, technique, and detection signature.
 
 ---
 
@@ -21,7 +21,7 @@ This matrix maps every challenge in the **10-Task Wazuh Gauntlet** to its corres
 | **07** | Windows Lineage | Defense Evasion | Masquerading: Match Legitimate Name or Location | **T1036.005** | Baseline Lineage Modeling (`services.exe` $\rightarrow$ `svchost.exe`) & Hunter Criteria |
 | **08** | NIDS Correlation | Discovery | Network Service Discovery | **T1046** | Suricata `eve.json` Nmap Signature $\rightarrow$ Rule `86601` |
 | **09** | Vulnerability Hunting | Initial Access | Exploit Public-Facing Application | **T1190** | OpenSearch Dev Tools REST API (`CVE-2026-72130` & `CVE-2025-41244`) |
-| **10** | False Positive Tuning | Defense Evasion | Indicator Removal: Rule Noise Suppression | — | Custom Rule `100060` (Child `level="0"` silencing) |
+| **10** | False Positive Tuning | — (SOC tuning, not an adversary technique) | Noise suppression of benign probe traffic related to **T1046** | — | Custom Rule `100060` (Child `level="0"` silencing) |
 
 ---
 
@@ -29,10 +29,8 @@ This matrix maps every challenge in the **10-Task Wazuh Gauntlet** to its corres
 
 | Custom Rule ID | Level | Tactic | Technique Name | MITRE ID |
 | :---: | :---: | :--- | :--- | :---: |
-| **`100001`** | **14** | Execution | Command and Scripting Interpreter: Unix Shell | **T1059.004** |
-| **`100010`** | **14** | Credential Access / Initial Access | Brute Force / Valid Accounts | **T1110** / **T1078** |
 | **`100011`** | **14** | Credential Access / Initial Access | Brute Force / Valid Accounts | **T1110** / **T1078** |
-| **`100012`** | **13** | Privilege Escalation / Lateral Movement | Sysinternals PsExec Service Installation | **T1543.003** / **T1021.002** |
-| **`100013`** | **14** | Privilege Escalation / Lateral Movement | Impacket Randomized Service Installation | **T1543.003** / **T1021.002** |
 | **`100025`** | **10** | Discovery / Credential Access | System Owner/User Discovery & /etc/shadow | **T1033** / **T1003.008** |
 | **`100060`** | **0** | Discovery (Benign Tuning) | Network Service Discovery (Suppressed) | **T1046** |
+
+> Draft rules `100001`, `100010`, `100012` and `100013` are intentionally not listed here; see [`detections/drafts/`](../detections/drafts/draft_rules_untested.xml). They get mapped once they are validated.

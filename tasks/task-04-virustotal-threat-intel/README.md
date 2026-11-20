@@ -35,7 +35,7 @@ Configured in Ubuntu Manager `/var/ossec/etc/ossec.conf` immediately before `</o
 <!-- VirusTotal Threat Intelligence Integration -->
 <integration>
   <name>virustotal</name>
-  <api_key><YOUR_VIRUSTOTAL_API_KEY></api_key>
+  <api_key>YOUR_VIRUSTOTAL_API_KEY</api_key>
   <group>syscheck</group>
   <alert_format>json</alert_format>
 </integration>

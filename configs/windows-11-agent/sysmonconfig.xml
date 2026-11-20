@@ -1,5 +1,7 @@
 <!--
-  Microsoft Sysinternals Sysmon Configuration (SwiftOnSecurity Schema)
+  Minimal LAB Sysmon configuration (NOT the full SwiftOnSecurity / Sysmon-Modular ruleset).
+  Logs only network connections to ports 445, 3389 and 22 plus LSASS access; it does not see HTTP/HTTPS
+  C2. For real coverage start from SwiftOnSecurity/sysmon-config or olafhartong/sysmon-modular.
   Target: Windows 11 Enterprise (windows-vm-01)
 -->
 <Sysmon schemaversion="4.90">

@@ -7,7 +7,7 @@
 | **Domain** | Network Intrusion Detection (NIDS), Packet Inspection, HIDS Correlation |
 | **Target Host** | Rocky Linux 9.8 (`rhel-endpoint-01` - `192.168.198.132` \| Agent ID: `002`) |
 | **Adversary Machine** | Kali Linux (`192.168.198.128`) |
-| **Attack Vector** | Nmap Network Service Probing (`nmap -sV -p 22,80,443`) |
+| **Attack Vector** | Nmap service probing (`nmap -sV -p 22,80,443`) + ICMPv6 ping from Kali |
 | **NIDS Engine** | Suricata 7.x logging to `/var/log/suricata/eve.json` |
 | **Decoded Wazuh Rule** | **Rule `86601` (Level 3 - Suricata Alert)** |
 | **MITRE ATT&CK Mapping** | **T1046** (Network Service Discovery) |
@@ -32,7 +32,7 @@ The SOC Lead requires:
 Configured in `/var/ossec/etc/ossec.conf` on Rocky Linux:
 ```xml
 <localfile>
-  <log_format>suricata</log_format>
+  <log_format>json</log_format>
   <location>/var/log/suricata/eve.json</location>
 </localfile>
 ```
@@ -56,6 +56,8 @@ nmap -sV -p 22,80,443 192.168.198.132
 * **Inbound Interface (`data.in_iface`):** `ens160`
 * **Log Ingestion Path (`location`):** `/var/log/suricata/eve.json`
 * **Rule Groups (`rule.groups`):** `ids, suricata`
+
+> **Verification scope (read this before citing the result):** the alert captured in Wazuh is the custom test signature `9000001` (`TEST_ALERT: Ping detected from Kali`) firing on an **ICMPv6 ping** from Kali. It proves the `eve.json` -> Wazuh agent -> decoder -> rule `86601` pipeline works end to end. It does **not** show a stock Emerging Threats `ET SCAN` signature firing on the Nmap TCP scan; capturing that is a follow-up item.
 
 ---
 
@@ -81,4 +83,4 @@ Detailed document attributes confirming parsing of `eve.json` fields:
 ## 🧠 Analyst Engineering Notes & Lessons Learned
 
 > **SOC Architecture Insight:**  
-> When Suricata outputs alerts in `eve.json`, Wazuh does not need to parse raw text syslog with complex regex. The native `suricata` log format allows Wazuh to parse nested JSON fields directly into OpenSearch, providing deep visibility into layer-3/layer-4 packet flows alongside host system calls.
+> When Suricata outputs alerts in `eve.json`, Wazuh does not need to parse raw text syslog with complex regex. Setting `<log_format>json</log_format>` lets Wazuh's built-in JSON decoder parse the nested `eve.json` fields directly into OpenSearch, providing deep visibility into layer-3/layer-4 packet flows alongside host system calls.

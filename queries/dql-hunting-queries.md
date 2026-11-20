@@ -2,6 +2,8 @@
 
 This handbook provides the core OpenSearch Dashboard Query Language (DQL) queries developed during the 10-Task Gauntlet to slice through background telemetry, isolate adversary actions, and eliminate alert fatigue.
 
+> **How to use:** run these in the Wazuh Dashboard DQL bar and you can also set the time range with the time picker. Section 1 comes from Task 06 and was run in the lab (42 hits); the rest are starting points - validate field names against your own index mappings before relying on them.
+
 ---
 
 ## 1. Gauntlet Task 06: High-Severity Triage Filter
@@ -35,7 +37,7 @@ data.virustotal.positives >= 10
 Find interactive commands spawned by Windows script interpreters or administrative shells:
 
 ```sql
-agent.id: "001" and (data.win.eventdata.parentProcessName: "*cmd.exe" or data.win.eventdata.parentProcessName: "*powershell.exe")
+agent.id: "001" and (data.win.eventdata.parentProcessName: *cmd.exe or data.win.eventdata.parentProcessName: *powershell.exe)
 ```
 
 Find process executions containing encoded PowerShell cradles or privilege discovery flags:
@@ -48,10 +50,14 @@ Hunt for remote service creations (Sysinternals `PSEXESVC` vs Impacket randomize
 
 ```sql
 # Sysinternals PsExec service execution
-data.win.system.eventID: "7045" and data.win.eventdata.serviceName: "*PSEXESVC*"
+data.win.system.eventID: "7045" and data.win.eventdata.serviceName: *PSEXESVC*
 
-# Impacket PsExec randomized service execution (inspect newly registered service binaries in SystemRoot)
-data.win.system.eventID: "7045" and data.win.eventdata.imagePath: /.*\\(Windows|System32)\\[A-Za-z0-9]{4,8}\.exe/
+# Impacket PsExec randomized service execution: DQL has no regex support, so use the
+# Dev Tools console instead (untested draft - confirm the imagePath field is a keyword type):
+#   GET wazuh-alerts-*/_search
+#   { "query": { "bool": { "must": [
+#       { "match":  { "data.win.system.eventID": "7045" } },
+#       { "regexp": { "data.win.eventdata.imagePath": ".*\\\\[A-Za-z0-9]{4,8}\\.exe" } } ] } } }
 ```
 
 ---
@@ -83,7 +89,7 @@ location: "/var/log/suricata/eve.json" and data.alert.severity <= 2
 Find port scan and reconnaissance signatures:
 
 ```sql
-data.alert.category: "Attempted Information Leak" or data.alert.signature: "*Scan*" or data.alert.signature: "*Nmap*"
+data.alert.category: "Attempted Information Leak" or data.alert.signature: *Scan* or data.alert.signature: *Nmap*
 ```
 
 ---
@@ -93,5 +99,5 @@ data.alert.category: "Attempted Information Leak" or data.alert.signature: "*Sca
 Isolate all binary file tampering events across `/usr/bin`, `/usr/sbin`, or `C:\Users\Public`:
 
 ```sql
-rule.groups: "syscheck_entry_modified" and (syscheck.path: "/usr/bin/*" or syscheck.path: "C:\\Users\\Public\\*")
+rule.groups: "syscheck_entry_modified" and (syscheck.path: /usr/bin/* or syscheck.path: C\:\\Users\\Public\\*)
 ```

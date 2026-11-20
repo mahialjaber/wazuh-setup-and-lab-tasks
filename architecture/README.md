@@ -23,7 +23,7 @@ The lab mirrors an enterprise defense network comprising central management, dua
 |    - Hostname: windows-vm-01                                                                      |
 |    - OS: Windows 11 Enterprise Evaluation (Build 10.0.26200) | IP: 192.168.198.129                |
 |    - Agent Version: Wazuh Agent v4.11.2 / v4.14.8                                                 |
-|    - Telemetry Stack: Windows Defender Firewall (ON), Sysmon v15 (SwiftOnSecurity Config),       |
+|    - Telemetry Stack: Windows Defender Firewall (ON), Sysmon (minimal lab config),               |
 |                       Advanced Audit Policy (Process Creation Event 4688 + Command Line Logging), |
 |                       Real-Time FIM (C:\Users\Public)                                             |
 |                                                                                                   |

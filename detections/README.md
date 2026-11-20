@@ -10,13 +10,15 @@ This directory houses the custom detection rules, suppression logic, and MITRE A
 | :---: | :---: | :--- | :--- | :--- |
 | **`100025`** | **10** | High Reconnaissance | PCRE2 regex matching `whoami /priv` or `cat /etc/shadow` across Windows and Linux. | **T1033**, **T1003.008** |
 | **`100060`** | **0** | False Positive Tuning | Silences Suricata ping signature `9000001` exclusively when originating from authorized Kali IPv6. | **T1046** |
-| **`100010`** | **14** | Critical Breach | Correlates Windows logon success following multiple auth failures from same IP (`if_sid: 60106` + `if_matched_sid: 60204`). | **T1110**, **T1078** |
 | **`100011`** | **14** | Critical Breach | Correlates SSH authentication success following brute-force failures from same IP (`if_sid: 5715` + `if_matched_sid: 5720`). | **T1110**, **T1078** |
-| **`100012`** | **13** | Lateral Movement | Detects Sysinternals PsExec service installation (`Event ID 7045` + `serviceName: PSEXESVC`). | **T1543.003**, **T1021.002** |
-| **`100013`** | **14** | Lateral Movement | Detects Impacket PsExec randomized service installation (`Event ID 7045` + `%SystemRoot%\*.exe`). | **T1543.003**, **T1021.002** |
-| **`100001`** | **14** | Critical C2 | Regex matching interactive bash / netcat reverse shell syntax over network sockets. | **T1059.004** |
 | **`5720`** | **10** | Overwrite Tuning | Lowers SSH brute-force threshold to exactly 10 failed attempts within 120s from the same IP. | **T1110** |
 | **`5712`** | **10** | Overwrite Tuning | Lowers invalid user SSH brute-force threshold to exactly 10 attempts within 120s from the same IP. | **T1110** |
+
+> **Status of each rule.** `100025`, `100060` and the `5712`/`5720` overrides were exercised in the lab (see `tasks/`). `100011` is referenced by Active Response but its success-after-failure chain has no separate evidence yet. `100025` is a *lab prototype* (unscoped regex, see the note in `local_rules.xml`).
+
+## 🧪 Draft Rules (not deployed)
+
+`100001` (reverse shell), `100010` (Windows brute-force then success), `100012` (PsExec) and `100013` (Impacket PsExec) were written but never replayed through `wazuh-logtest`, so they live in [`drafts/draft_rules_untested.xml`](drafts/draft_rules_untested.xml) with a list of known problems. They move back into `local_rules.xml` only after a positive sample, a negative sample and saved logtest output exist for each.
 
 ---
 

@@ -3,12 +3,26 @@
   Author: Mahi Al Jaber (github.com/mahialjaber)
   Repository: wazuh-setup-and-lab-tasks
   Location on Manager: /var/ossec/etc/rules/local_rules.xml
+
+  SCOPE OF THIS FILE
+  Only rules that were exercised in the lab (see tasks/ for evidence) live here.
+  Rules that were written but NOT yet replayed through wazuh-logtest
+  (100001, 100010, 100012, 100013) were moved to detections/drafts/draft_rules_untested.xml
+  and must not be deployed until they have logtest evidence.
 -->
 
 <group name="local,custom_detection,">
 
   <!-- ======================================================== -->
   <!-- TASK 03: Privilege & Credential Reconnaissance Detection  -->
+  <!--                                                          -->
+  <!-- LAB PROTOTYPE: this rule has no <if_group>/<if_sid>, so  -->
+  <!-- the PCRE2 runs against every event the manager receives. -->
+  <!-- That is fine for a lab and was verified with             -->
+  <!-- wazuh-logtest, but it is too expensive for a production  -->
+  <!-- fleet. Scoped production variants (Windows commandLine   -->
+  <!-- field / auditd) are documented in                        -->
+  <!-- tasks/task-03-detection-engineering-rules/README.md.     -->
   <!-- ======================================================== -->
   <rule id="100025" level="10">
     <description>Suspicious command execution: whoami /priv (Windows) or cat /etc/shadow (Linux)</description>
@@ -19,38 +33,16 @@
     </mitre>
   </rule>
 
-  <!-- ======================================================== -->
-  <!-- Interactive Linux Reverse Shell Detection                 -->
-  <!-- ======================================================== -->
-  <rule id="100001" level="14">
-    <if_group>syslog</if_group>
-    <match>bash -i >&amp; /dev/tcp/|nc -e /bin/bash|ncat -e /bin/sh</match>
-    <description>CRITICAL: Interactive Reverse Shell Execution Detected!</description>
-    <mitre>
-      <id>T1059.004</id>
-    </mitre>
-  </rule>
-
 </group>
 
 <group name="soc_credential_access,">
 
   <!-- ======================================================== -->
-  <!-- Windows Brute-Force Escalation: Failures Followed by Success -->
-  <!-- ======================================================== -->
-  <rule id="100010" level="14" timeframe="300">
-    <if_sid>60106</if_sid>
-    <if_matched_sid>60204</if_matched_sid>
-    <same_field>win.eventdata.ipAddress</same_field>
-    <description>CRITICAL: Windows logon succeeded following multiple authentication failures from same IP</description>
-    <mitre>
-      <id>T1110</id>
-      <id>T1078</id>
-    </mitre>
-  </rule>
-
-  <!-- ======================================================== -->
   <!-- Linux SSH Brute-Force Escalation: Failures Followed by Success -->
+  <!-- Listed in <active-response><rules_id> on the manager.     -->
+  <!-- NOTE: the 5712/5720 overrides below were exercised in     -->
+  <!-- Task 05; this success-after-failure chain (100011) was    -->
+  <!-- not captured as a separate piece of evidence yet.         -->
   <!-- ======================================================== -->
   <rule id="100011" level="14" timeframe="300">
     <if_sid>5715</if_sid>
@@ -60,34 +52,6 @@
     <mitre>
       <id>T1110</id>
       <id>T1078</id>
-    </mitre>
-  </rule>
-
-  <!-- ======================================================== -->
-  <!-- Sysinternals PsExec Service Execution Detection          -->
-  <!-- ======================================================== -->
-  <rule id="100012" level="13">
-    <if_group>windows</if_group>
-    <field name="win.system.eventID">^7045$</field>
-    <field name="win.eventdata.serviceName">^PSEXESVC$</field>
-    <description>CRITICAL: Sysinternals PsExec Service Installation Detected (PSEXESVC)</description>
-    <mitre>
-      <id>T1543.003</id>
-      <id>T1021.002</id>
-    </mitre>
-  </rule>
-
-  <!-- ======================================================== -->
-  <!-- Impacket PsExec Service Execution Detection (Randomized) -->
-  <!-- ======================================================== -->
-  <rule id="100013" level="14">
-    <if_group>windows</if_group>
-    <field name="win.system.eventID">^7045$</field>
-    <field name="win.eventdata.imagePath" type="pcre2">^%?SystemRoot%?\\([A-Za-z0-9]{4,8})\.exe$</field>
-    <description>CRITICAL: Impacket PsExec Randomized Service Binary Installation Detected</description>
-    <mitre>
-      <id>T1543.003</id>
-      <id>T1021.002</id>
     </mitre>
   </rule>
 
@@ -128,6 +92,7 @@
   <!-- ======================================================== -->
   <!-- TASK 10: False Positive Tuning - Noise Suppression       -->
   <!-- Suppresses authorized ping probes from Kali test IPv6     -->
+  <!-- (lab-only: hard-coded link-local address)                -->
   <!-- ======================================================== -->
   <rule id="100060" level="0">
     <if_sid>86601</if_sid>

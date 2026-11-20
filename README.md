@@ -115,16 +115,16 @@ Each task represents an independent defensive module complete with attack simula
 
 ## ⚡ Standout Engineering Breakthroughs
 
-* **Tier-3 OpenSearch Dev Tools Querying (Task 09):** Bypassed GUI limitations by writing raw Elasticsearch/OpenSearch JSON REST queries against `wazuh-states-vulnerabilities-*` to programmatically extract the highest-severity CVEs across heterogeneous endpoints.
+* **OpenSearch Dev Tools REST Querying (Task 09):** Went beyond the GUI by writing raw OpenSearch JSON REST queries against `wazuh-states-vulnerabilities-*` to programmatically extract the highest-severity CVEs across heterogeneous endpoints.
 * **5-Hour Active Defense Root Cause Debugging (Task 05):** Diagnosed how Rocky Linux 9's `rsyslog` / `/var/log/secure` collection, `iptables-nft`/`firewalld` firewall backend, SSH rule triggers (`5712` invalid user vs `5720` failed password), and `<location>` scoping (`local` vs `server` vs `defined-agent`) interact when blocking Kali NetExec SSH brute force.
 * **Production Alert Fatigue Tuning (Task 10):** Addressed the #1 operational issue in modern SOCs by engineering a surgical `level="0"` suppression rule anchored to exact IPv6 addresses, reducing benign scanner noise to zero while preserving alerting for genuine threats.
-* **Sub-Second Binary FIM Differential Analysis (Task 02):** Validated inotify differential reporting against modified production binaries in `/usr/bin/`, confirming integrity monitoring without crashing the `syscheck` engine.
+* **Real-Time Binary FIM Differential Analysis (Task 02):** Validated inotify differential reporting against modified production binaries in `/usr/bin/`, confirming integrity monitoring without crashing the `syscheck` engine.
 
 ---
 
-## 💻 Production Detection Rules
+## 💻 Custom Detection Rules (lab-verified)
 
-All custom rules authored during this project are located in [`detections/local_rules.xml`](detections/local_rules.xml):
+Rules that were exercised in the lab live in [`detections/local_rules.xml`](detections/local_rules.xml). Rules that were written but not yet replayed through `wazuh-logtest` are kept separately in [`detections/drafts/`](detections/drafts/draft_rules_untested.xml) and are not deployed. Note that `100025` is a lab prototype (unscoped regex); see Task 03 for the scoped production variants.
 
 ```xml
 <group name="local,syslog,sshd,custom_detection,">
@@ -177,12 +177,12 @@ All custom rules authored during this project are located in [`detections/local_
 
 The repository includes a curated library of production threat hunting queries:
 
-* **[queries/dql-hunting-queries.md](queries/dql-hunting-queries.md):** 15+ production DQL queries covering:
-  * High-Severity Noise-Filtered Triage (`rule.level >= 8 and not agent.id: "000"...`)
-  * Kerberoasting & Golden Ticket Indicators (Event ID 4769)
-  * Process Lineage Masquerading (`svchost.exe` spawning PowerShell)
-  * CloudTrail IAM Privilege Escalation (`AttachUserPolicy`, `CreateAccessKey`)
-  * Suricata High-Severity NIDS Exploitation
+* **[queries/dql-hunting-queries.md](queries/dql-hunting-queries.md):** OpenSearch DQL hunting queries covering:
+  * High-severity, noise-filtered triage (`rule.level >= 8 and not agent.id: "000"...`)
+  * VirusTotal-flagged payloads
+  * Windows process lineage and LOLBin command lines; PsExec service creation
+  * Linux SSH brute-force and successful logons from unexpected subnets
+  * Suricata NIDS alerts and scan signatures; FIM tampering of `/usr/bin`
 * **[queries/opensearch-devtools-api.json](queries/opensearch-devtools-api.json):** Raw REST API JSON queries for the OpenSearch Dev Tools console.
 
 ---
@@ -226,7 +226,8 @@ wazuh-setup-and-lab-tasks/
 │   └── task-10-false-positive-tuning/       # Child rule 100060 (level="0"), noise reduction
 ├── detections/
 │   ├── README.md                            # Detection engineering documentation
-│   └── local_rules.xml                      # Production-ready custom Wazuh rules
+│   ├── local_rules.xml                      # Lab-verified custom Wazuh rules
+│   └── drafts/draft_rules_untested.xml      # Written but not yet logtested (not deployed)
 ├── queries/
 │   ├── dql-hunting-queries.md               # 15+ production OpenSearch DQL queries
 │   └── opensearch-devtools-api.json         # Raw REST API search queries
@@ -250,4 +251,4 @@ wazuh-setup-and-lab-tasks/
 * **Author:** Mahi Al Jaber ([@mahialjaber](https://github.com/mahialjaber))
 * **Email:** [mahialjaber.dev@gmail.com](mailto:mahialjaber.dev@gmail.com)
 * **Related Projects:**
-  * [SOC-Log-Analysis-Datasets](https://github.com/mahialjaber/SOC-Log-Analysis-Datasets) — *30+ ⭐ Enterprise Detection & Telemetry Datasets*
+  * [SOC-Log-Analysis-Datasets](https://github.com/mahialjaber/SOC-Log-Analysis-Datasets) — *Synthetic multi-domain SOC log datasets with a hunting playbook*

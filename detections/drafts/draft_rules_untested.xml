@@ -1,0 +1,84 @@
+<!--
+  DRAFT RULES - NOT DEPLOYED, NOT YET VALIDATED
+  Author: Mahi Al Jaber (github.com/mahialjaber)
+
+  These rules were moved out of local_rules.xml because they have not been
+  replayed through /var/ossec/bin/wazuh-logtest with real sample events yet.
+  Do NOT copy them into /var/ossec/etc/rules/ until each one has:
+    1. a real sample log line (positive) that fires it,
+    2. a benign sample (negative) that does not,
+    3. the wazuh-logtest output saved under tasks/ or detections/evidence/.
+
+  Known issues to resolve first:
+    - 100001: the syslog group does not contain interactive bash commands. A
+      reverse-shell command line is only visible through auditd execve records
+      (usually hex-encoded proctitle) or an EDR/Sysmon-for-Linux feed. Rewrite
+      against the audit group / decoded audit.* fields.
+    - 100010: depends on the stock EventChannel rule IDs 60106 / 60204 and the
+      win.eventdata.ipAddress field. Confirm both exist in your Wazuh version.
+    - 100012 / 100013: need real Event ID 7045 samples from a PsExec / Impacket
+      run. 100013 matches ANY 4-8 character service binary in %SystemRoot%, so
+      expect false positives without tuning.
+-->
+
+<group name="local,custom_detection,draft,">
+
+  <!-- ======================================================== -->
+  <!-- DRAFT: Interactive Linux Reverse Shell Detection          -->
+  <!-- ======================================================== -->
+  <rule id="100001" level="14">
+    <if_group>syslog</if_group>
+    <match>bash -i >&amp; /dev/tcp/|nc -e /bin/bash|ncat -e /bin/sh</match>
+    <description>DRAFT: Interactive Reverse Shell Execution Detected</description>
+    <mitre>
+      <id>T1059.004</id>
+    </mitre>
+  </rule>
+
+</group>
+
+<group name="soc_credential_access,draft,">
+
+  <!-- ======================================================== -->
+  <!-- DRAFT: Windows Brute-Force Escalation: Failures Followed by Success -->
+  <!-- ======================================================== -->
+  <rule id="100010" level="14" timeframe="300">
+    <if_sid>60106</if_sid>
+    <if_matched_sid>60204</if_matched_sid>
+    <same_field>win.eventdata.ipAddress</same_field>
+    <description>DRAFT: Windows logon succeeded following multiple authentication failures from same IP</description>
+    <mitre>
+      <id>T1110</id>
+      <id>T1078</id>
+    </mitre>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- DRAFT: Sysinternals PsExec Service Execution Detection    -->
+  <!-- ======================================================== -->
+  <rule id="100012" level="13">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^7045$</field>
+    <field name="win.eventdata.serviceName">^PSEXESVC$</field>
+    <description>DRAFT: Sysinternals PsExec Service Installation Detected (PSEXESVC)</description>
+    <mitre>
+      <id>T1543.003</id>
+      <id>T1021.002</id>
+    </mitre>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- DRAFT: Impacket PsExec Service Execution (randomized name) -->
+  <!-- ======================================================== -->
+  <rule id="100013" level="14">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^7045$</field>
+    <field name="win.eventdata.imagePath" type="pcre2">^%?SystemRoot%?\\([A-Za-z0-9]{4,8})\.exe$</field>
+    <description>DRAFT: Impacket PsExec Randomized Service Binary Installation Detected</description>
+    <mitre>
+      <id>T1543.003</id>
+      <id>T1021.002</id>
+    </mitre>
+  </rule>
+
+</group>
