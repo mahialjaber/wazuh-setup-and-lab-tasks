@@ -1,6 +1,3 @@
-<div align="center">
-
-<img src="assets/banner.jpg" alt="Wazuh Setup, Lab & Detection Tasks Hero Banner" width="100%" />
 
 # 🛡️ Wazuh SIEM Setup, Lab & Detection Tasks
 ### *From Blind Copy-Paste to Production Detection Engineering, Threat Hunting, and Active Defense*
